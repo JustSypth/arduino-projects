@@ -168,7 +168,9 @@ fn main() -> ! {
                 ufmt::uwriteln!(&mut serial, "Difference: {}cm", difference).unwrap();
 
                 if difference > 2 {
+                    ufmt::uwriteln!(&mut serial, "Alerting!!!").unwrap();
                     output.set_high();
+                    is_set = false;
                 }
             }
         }
