@@ -162,9 +162,8 @@ fn main() -> ! {
                 last_check_time = time;
                 
                 let current_distance = get_distance(&mut trigger, &echo);
-                ufmt::uwriteln!(&mut serial, "Set distance: {}    Current distance: {}", set_distance, current_distance).unwrap();
-
                 let difference = abs(set_distance as i32 - current_distance as i32);
+                
                 ufmt::uwriteln!(&mut serial, "Difference: {}cm", difference).unwrap();
 
                 if difference > 2 {
