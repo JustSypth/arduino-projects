@@ -33,8 +33,8 @@ fn main() -> ! {
     .with_rows(2)
     .init().unwrap();
 
-    let mut y = pins.d2.into_pull_up_input();
-    let mut n = pins.d3.into_pull_up_input();
+    let y = pins.d2.into_pull_up_input();
+    let n = pins.d3.into_pull_up_input();
 
     loop {
         lcd.clear().unwrap();
@@ -42,7 +42,7 @@ fn main() -> ! {
         lcd.set_cursor(1, 0).unwrap();
         lcd.write_str("cookie? (Y/N)").unwrap();
     
-        let response = get_response(&mut y, &mut n);
+        let response = get_response(&y, &n);
         match response {
             true => {
                 lcd.clear().unwrap();
@@ -60,7 +60,7 @@ fn main() -> ! {
     }
 }
 
-fn is_pressed<M>(pin: &mut Pin<mode::Input<mode::PullUp>, M>, debounce: &mut bool) -> bool 
+fn is_pressed<M>(pin: &Pin<mode::Input<mode::PullUp>, M>, debounce: &mut bool) -> bool 
 where
     M: PinOps
 {
@@ -79,7 +79,7 @@ where
     }
 }
 
-fn get_response<M, N>(y: &mut Pin<mode::Input<mode::PullUp>, M>, n: &mut Pin<mode::Input<mode::PullUp>, N>) -> bool
+fn get_response<M, N>(y: &Pin<mode::Input<mode::PullUp>, M>, n: &Pin<mode::Input<mode::PullUp>, N>) -> bool
 where
     M: PinOps,
     N: PinOps
