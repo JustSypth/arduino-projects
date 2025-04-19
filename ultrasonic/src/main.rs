@@ -4,7 +4,7 @@
 #![feature(abi_avr_interrupt)]
 
 use core::cell;
-use arduino_hal::{hal::port::{PB0, PB1}, port::{mode::{Input, Output, PullUp}, Pin}};
+use arduino_hal::{hal::port::{PB0, PB1}, port::{mode::{self, Input, Output, PullUp}, Pin, PinOps}};
 use panic_halt as _;
 
 /* Pin placement:
@@ -122,38 +122,26 @@ fn main() -> ! {
     loop {
         let time = millis();
 
-        // Set button
         #[allow(unused_assignments)]
-        if set.is_low() && can_set {
-            if !set_pressed {
-                set_pressed = true;
-                can_set = false;
-                is_set = false;
-    
-                set_distance = get_distance(&mut trigger, &echo);
-                ufmt::uwriteln!(&mut serial, "Setting distance: {}cm", set_distance).unwrap();
-                is_set = true;
-            }
-        } else {
-            set_pressed = false;
+        if is_pressed(&set, &mut set_pressed) {
+            if !can_set {continue;}
+
+            can_set = false;
+            is_set = false;
+
+            set_distance = get_distance(&mut trigger, &echo);
+            ufmt::uwriteln!(&mut serial, "Setting distance: {}cm", set_distance).unwrap();
+            is_set = true;
         }
 
-        // Cancel button
-        if cancel.is_low() {
-            if !cancel_pressed {
-                cancel_pressed = true;
+        if is_pressed(&cancel, &mut cancel_pressed) {
+            ufmt::uwriteln!(&mut serial, "Stopping the alarm..").unwrap();
+            output.set_low();
 
-                ufmt::uwriteln!(&mut serial, "Stopping the alarm..").unwrap();
-
-                output.set_low();
-                is_set = false;
-                can_set = true;
-            }
-        } else {
-            cancel_pressed = false;
+            is_set = false;
+            can_set = true;
         }
 
-        // Check distance
         if is_set {
             if !check_debounce {
                 check_debounce = true;
@@ -178,5 +166,24 @@ fn main() -> ! {
         }
 
         arduino_hal::delay_ms(50);
+    }
+}
+
+fn is_pressed<M>(pin: &Pin<mode::Input<mode::PullUp>, M>, debounce: &mut bool) -> bool 
+where
+    M: PinOps
+{
+    let is_pressed = pin.is_low();
+
+    if is_pressed {
+        if !*debounce {
+            *debounce = true;
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        *debounce = false;
+        return false;
     }
 }
